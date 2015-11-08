@@ -30,12 +30,13 @@ import java.util.function.Consumer;
 
 public class WordPressExit {
 
-    public static void exit(InputStream inputStream, File output, boolean asciidoc, Consumer<String> logger) throws Exception {
+    public static void exit(File input, File output, boolean asciidoc, String disqusOutput, Consumer<String> logger) throws Exception {
         long begin = System.currentTimeMillis();
         logger.accept("BEGIN");
 
         logger.accept("Begin extraction of posts...");
-        List<Post> posts = new PostExtractor(inputStream).getPosts();
+        PostExtractor postExtractor = new PostExtractor(new FileInputStream(input));
+        List<Post> posts = postExtractor.getPosts();
         logger.accept("Find " + posts.size() + " posts");
 
         output.mkdirs();
@@ -50,6 +51,9 @@ public class WordPressExit {
                 throw new RuntimeException(e);
             }
         });
+
+        postExtractor.replaceForDisqus(input.getAbsolutePath(), disqusOutput);
+
         logger.accept("END : duration=" + (System.currentTimeMillis() - begin) + " ms");
     }
 
@@ -57,7 +61,10 @@ public class WordPressExit {
         Arguments arguments = new Arguments();
         new JCommander(arguments, args);
 
-        exit(new FileInputStream(arguments.file), arguments.output, arguments.asciidoc, System.out::println);
+        Globals.from = arguments.from;
+        Globals.to = arguments.to;
+
+        exit(arguments.file, arguments.output, arguments.asciidoc, arguments.disqus, System.out::println);
     }
 
 }

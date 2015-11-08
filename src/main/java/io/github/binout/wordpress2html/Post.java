@@ -16,17 +16,25 @@
 package io.github.binout.wordpress2html;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Stream;
 
 public class Post {
 
     private final String title;
     private final String htmlContent;
     private final LocalDateTime date;
+    private final List<String> tags;
+    private final String link;
 
-    public Post(String title, String htmlContent, LocalDateTime date) {
-        this.title = title;
+//    public Post(String title, String htmlContent, LocalDateTime date, Stream<String> tags) {
+    public Post(String title, String htmlContent, LocalDateTime date, List<String> tags, String link) {
+        this.title = title.replaceAll("-{2,}", "-");
         this.htmlContent = htmlContent;
         this.date = date;
+        this.tags = tags;
+        this.link = link;
     }
 
     public String getTitle() {
@@ -39,6 +47,14 @@ public class Post {
 
     public LocalDateTime getDate() {
         return date;
+    }
+
+    public List<String> getTags() {
+        return tags;
+    }
+
+    public String getLink() {
+        return link;
     }
 
     @Override

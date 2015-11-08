@@ -17,10 +17,16 @@ public class WordPressExitTest {
     @Test
     public void end2endTest() throws Exception {
         File output = testFolder.newFolder();
-        InputStream inputStream = Thread.currentThread().getContextClassLoader().getResourceAsStream("javaonemorething.xml");
+        // InputStream inputStream = Thread.currentThread().getContextClassLoader().getResourceAsStream("javaonemorething.xml");
+        // InputStream inputStream = Thread.currentThread().getContextClassLoader().getResourceAsStream("javathoughts.wordpress.2015-11-07.xml");
+        File file = new File(Thread.currentThread().getContextClassLoader().getResource("javathoughts.wordpress.2015-11-07.xml").getFile());
 
-        WordPressExit.exit(inputStream, output, false, System.out::println);
+        Globals.from = "javathought.wordpress.com";
+        Globals.to = "javathought.github.io";
 
-        assertThat(output.list()).hasSize(38);
+        WordPressExit.exit(file, output, true, "disqus.xml", System.out::println);
+
+        // assertThat(output.list()).hasSize(38);
+        assertThat(output.list()).hasSize(134);
     }
 }

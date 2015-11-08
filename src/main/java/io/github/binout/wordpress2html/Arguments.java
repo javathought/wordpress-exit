@@ -28,6 +28,15 @@ class Arguments {
     @Parameter(names = "-output", converter = FileConverter.class)
     File output;
 
+    @Parameter(names = "-disqus", description = "convert to disqus")
+    String disqus;
+
+    @Parameter(names = "-from", description = "convert from domain")
+    String from;
+
+    @Parameter(names = "-to", description = "convert to domain")
+    String to;
+
     @Parameter(names = "-asciidoc", description = "Convert to asciidoc" , arity = 0)
     boolean asciidoc = false;
 

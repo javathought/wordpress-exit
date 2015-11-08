@@ -15,22 +15,32 @@
  */
 package io.github.binout.wordpress2html.extractor;
 
+import io.github.binout.wordpress2html.Globals;
 import io.github.binout.wordpress2html.Post;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 import javax.xml.xpath.*;
-import java.io.FileNotFoundException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class PostExtractor {
 
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private static final DateTimeFormatter DATE_TIME_FORMATTER2 = DateTimeFormatter.ofPattern("yyyy/MM/dd");
     private final List<Post> posts;
 
     public PostExtractor(InputStream inputStream) throws Exception {
@@ -41,9 +51,30 @@ public class PostExtractor {
                     String title = DomUtils.findChildTextContent(n, "title");
                     LocalDateTime dateTime = LocalDateTime.parse(DomUtils.findChildTextContent(n, "wp:post_date"), DATE_TIME_FORMATTER);
                     String content = DomUtils.findChildTextContent(n, "content:encoded");
-                    return new Post(title, content, dateTime);
-
+                    String link = DomUtils.findChildTextContent(n, "link");
+                    List<String> tags = DomUtils.findChildTextContentListOnAttribute(n, "category", "domain", "post_tag")
+                            .collect(Collectors.toList());
+                    return new Post(title, content, dateTime, tags, link);
                 }).collect(Collectors.toList());
+
+    }
+
+    public void replaceForDisqus (String wpExport, String disqusImport) throws IOException {
+        Path path = Paths.get(wpExport);
+        Path pathout = Paths.get(disqusImport);
+        Charset charset = StandardCharsets.UTF_8;
+
+        String content = new String(Files.readAllBytes(path), charset);
+        for (Post p : posts) {
+            content = content.replaceAll(p.getLink(),
+                    "https://" + Globals.to + "/" +
+                            p.getDate().format(DATE_TIME_FORMATTER2) + "/" +
+                            p.getTitle().replaceAll("[^a-zA-Z0-9.]+", "-").replaceAll("-$", "") +
+                            ".html");
+        }
+        content = content.replaceAll(Globals.from, Globals.to);
+        Files.write(pathout, content.getBytes(charset));
+
     }
 
     public List<Post> getPosts() {
@@ -54,7 +85,7 @@ public class PostExtractor {
         return DomUtils.getNodeList(new InputStreamReader(file), "//*[local-name()='item']");
     }
 
-    private static boolean isPost(Node n) {
+    protected static boolean isPost(Node n) {
         return DomUtils.findChildTextContent(n, "wp:post_type").equals("post");
     }
 

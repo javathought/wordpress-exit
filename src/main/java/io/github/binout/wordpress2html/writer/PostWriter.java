@@ -15,12 +15,14 @@
  */
 package io.github.binout.wordpress2html.writer;
 
+import io.github.binout.wordpress2html.Globals;
 import io.github.binout.wordpress2html.Post;
 import org.apache.commons.io.IOUtils;
 
 import java.io.*;
 import java.nio.file.Files;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Optional;
 
 public class PostWriter {
@@ -47,11 +49,28 @@ public class PostWriter {
     }
 
     private void addHeader(File asciidoc) throws IOException {
+        boolean firstTag = true;
+        List<String> tags;
         String content = IOUtils.toString(new FileInputStream(asciidoc));
         FileWriter fileWriter = new FileWriter(asciidoc, false);
         fileWriter.append("= ").append(post.getTitle()).append("\n");
-        fileWriter.append(":published_at: ").append(post.getDate().format(DATE_TIME_FORMATTER)).append("\n\n");
-        fileWriter.append(content);
+        fileWriter.append(":published_at: ").append(post.getDate().format(DATE_TIME_FORMATTER)).append("\n");
+        tags = post.getTags();
+        if (! tags.isEmpty()) {
+            fileWriter.append(":hp-tags: ");
+            for (String tag : post.getTags()) {
+                if (! firstTag) {
+                    fileWriter.append(", ");
+                } else {
+                    firstTag = false;
+                }
+                fileWriter.append(tag);
+            }
+            fileWriter.append("\n");
+        }
+        content = content.replaceAll(Globals.from, Globals.to);
+        content = content.replaceAll("\\[caption .*image:http://.*/(.*)\\[/caption\\]", "image::$1");
+        fileWriter.append("\n").append(content);
         fileWriter.close();
     }
 
@@ -65,7 +84,8 @@ public class PostWriter {
 
     private static String getFilename(Post p) {
         String name = p.getDate().format(DATE_TIME_FORMATTER) + "-" + p.getTitle();
-        return name.replaceAll("[^a-zA-Z0-9.-]", "-");
+        System.out.println("[" + name + "]");
+        return name.replaceAll("[^a-zA-Z0-9.]+", "-").replaceAll("-$", "");
     }
 
 }

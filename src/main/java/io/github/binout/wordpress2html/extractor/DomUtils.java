@@ -22,12 +22,13 @@ import org.xml.sax.InputSource;
 import javax.xml.XMLConstants;
 import javax.xml.xpath.*;
 import java.io.Reader;
+import java.util.List;
 import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-interface DomUtils {
+class DomUtils {
 
     static Stream<Node> streamOf(NodeList articles) {
         return StreamSupport.stream(Spliterators.spliteratorUnknownSize(new NodeListIterator(articles), Spliterator.DISTINCT | Spliterator.IMMUTABLE | Spliterator.NONNULL), false);
@@ -36,6 +37,17 @@ interface DomUtils {
     static String findChildTextContent(Node n, String nodeName) {
         return streamOf(n.getChildNodes()).filter(m -> m.getNodeName().equals(nodeName)).map(Node::getTextContent).findFirst().orElse("");
     }
+
+    // <category domain="post_tag" nicename="netbeans"><![CDATA[Netbeans]]></category>
+    static Stream<String> findChildTextContentListOnAttribute(Node n, String nodeName, String attribute, String attributeValue) {
+        return streamOf(n.getChildNodes()).filter(m -> {
+            return (m.getNodeName().equals(nodeName)
+                    && m.getAttributes().getNamedItem(attribute).getTextContent().equals(attributeValue)
+                    // && m.getAttributes().getNamedItem(attribute).getNodeName().equals(attributeValue)
+            );
+        }).map(Node::getTextContent);
+    }
+
 
     static NodeList getNodeList(Reader reader, String expression) throws XPathFactoryConfigurationException, XPathExpressionException {
         InputSource src = new InputSource(reader);
