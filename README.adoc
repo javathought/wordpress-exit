@@ -15,13 +15,13 @@ A tool to extract post from WordPress blog, in order to migrate to another blog.
 .Extract all posts in HTML format in output folder. A file is created for each post.
 [source]
 ----
-java - jar wordpress-exit.jar -file <XML_EXPORT> -output <OUTPUT_DIR>
+java - jar wordpress-exit.jar -file <XML_EXPORT> -output <OUTPUT_DIR> -from <WORDPRESS_DOMAIN> -to <GITHUB_IO_DOMAIN> -disqus <DISQUS_IMPORT.XML>
 ----
 
 .Extract all posts in HTML format in output folder. Each HTML file is converted to asciidoc using pandoc.
 [source]
 ----
-java - jar wordpress-exit.jar -file <XML_EXPORT> -output <OUTPUT_DIR> -asciidoc
+java - jar wordpress-exit.jar -file <XML_EXPORT> -output <OUTPUT_DIR> -asciidoc -from <WORDPRESS_DOMAIN> -to <GITHUB_IO_DOMAIN> -disqus <DISQUS_IMPORT.XML>
 ----
 
 NOTE: The conversion to asciidoc is based on https://gist.github.com/mojavelinux/5732518[roadmap described by Dan Allen]
