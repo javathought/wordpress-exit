@@ -24,6 +24,7 @@ import java.nio.file.Files;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
+import java.util.Scanner;
 
 public class PostWriter {
 
@@ -69,16 +70,69 @@ public class PostWriter {
             fileWriter.append("\n");
         }
         content = content.replaceAll(Globals.from, Globals.to);
-        content = content.replaceAll("\\[caption .*image:http://.*/(.*)\\[/caption\\]", "image::$1");
+        content = content.replaceAll("\\[caption .*image:http://.*/(.*)\\]\\[/caption\\]", "image::$1");
+        // TODO
+        // Add youtube conversion
+//        content = content.replaceAll("\\[youtube=http://www.youtube.com/watch?v=(.*)]", "video::$1[youtube]");
+//        [youtube=http://www.youtube.com/watch?v=cQ0bgz3tyNk&fs=1&hl=fr_FR]
+//        video::KCylB780zSM[youtube]
+        content = content.replaceAll("\\[.*code language=\"(.*)\"\\]", "[source,$1]");
+        content = content.replaceAll("&lt;", "<");
+        content = content.replaceAll("&gt;", ">");
+        content = content.replaceAll("&amp;", "&");
+        content = content.replaceAll("&quot;", "\"");
+        content = content.replaceAll("-{5,}", "-----------------------");
+
+
+
         fileWriter.append("\n").append(content);
         fileWriter.close();
     }
 
     private String getFullHtml() {
+
+        String content = post.getHtmlContent();
+        boolean pre = false;
+        StringBuilder builder = new StringBuilder();
+
+        Scanner scanner = new Scanner(content);
+        while (scanner.hasNextLine()) {
+            String line = scanner.nextLine();
+            // String line;
+            // process the line
+            line = line.replaceAll("</?pre>", " ");
+            if (line.contains("[code") || line.contains("[sourcecode")) {
+                pre = true;
+            }
+
+            if (pre) {
+                if (line.contains("[/code") || line.contains("[/sourcecode")) {
+                    pre = false;
+                }
+                line = line.replaceAll("<", "&lt;");
+                line = line.replaceAll(">", "&gt;");
+                line = line.replaceAll("&", "&amp;");
+                line = line.replaceAll("(\\[.*code .*\\])", "$1<pre>");
+                line = line.replaceAll("(\\[\\/.*code\\])", "</pre>");
+                builder.append(line).append("\n");
+
+            } else {
+                builder.append(line).append("</p><p>");
+
+            }
+
+
+        }
+        scanner.close();
+
+        if (post.getTitle().startsWith("XML")) {
+            System.out.println(builder.toString());
+        }
+
         return "<html><head>" +
                 "<meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\" />" +
                 "</head>" +
-                "<body>" + post.getHtmlContent().replace("\n", "</p><p>") +
+                "<body>" + builder.toString() +
                 "</body></html>";
     }
 
